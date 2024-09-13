@@ -32,6 +32,7 @@ func main() {
 
 	qr, err := qradar.NewClient(
 		*qradarLocation,
+		qradar.SetAPIversion("20.0"),
 		qradar.SetSECKey(*seckey),
 		qradar.SetHTTPClient(&http.Client{
 			Transport: &http.Transport{

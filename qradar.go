@@ -178,6 +178,14 @@ func SetAPIversion(api string) func(*Client) error {
 	}
 }
 
+// SetUserAgent sets user agent of the qradar api
+func SetUserAgent(userAgent string) func(*Client) error {
+	return func(c *Client) error {
+		c.UserAgent = userAgent
+		return nil
+	}
+}
+
 func (c *Client) requestHelp(method, urlStr, fields, filter string, from, to int, id *int, body interface{}) (*http.Request, error) {
 	if id != nil {
 		urlStr = fmt.Sprintf("%s/%d", urlStr, *id)
@@ -301,13 +309,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 			}
 		}
 	}
+
 	return resp, err
 }
 
 // CheckResponse checks the API response for errors.
 func CheckResponse(r *http.Response) error {
 	switch r.StatusCode {
-	case http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent:
+	case http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent, http.StatusPartialContent:
 		return nil
 	case http.StatusUnauthorized:
 		return fmt.Errorf("%s %d: %s", r.Request.URL.Path, r.StatusCode, ErrUnauthorized)
