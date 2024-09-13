@@ -1,3 +1,3 @@
-module github.com/ilyaglow/go-qradar
+module github.com/arush15june/go-qradar
 
 go 1.19

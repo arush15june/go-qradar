@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	qradar "github.com/ilyaglow/go-qradar"
+	qradar "github.com/arush15june/go-qradar"
 )
 
 var (
