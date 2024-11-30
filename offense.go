@@ -9,6 +9,7 @@ import (
 type OffenseService service
 
 const offensesAPIPrefix = "api/siem/offenses"
+const sourceAddressPrefix = "api/siem/source_addresses"
 
 // Offense represents QRadar's generated Offense.
 type Offense struct {
@@ -98,4 +99,32 @@ func (c *OffenseService) UpdateByID(ctx context.Context, fields string, id int, 
 		return nil, err
 	}
 	return &result, nil
+}
+
+type SourceAddress struct {
+	DomainID                   int    `json:"domain_id"`
+	EventFlowCount             int    `json:"event_flow_count"`
+	FirstEventFlowSeen         int    `json:"first_event_flow_seen"`
+	ID                         int    `json:"id"`
+	LastEventFlowSeen          int    `json:"last_event_flow_seen"`
+	LocalDestinationAddressIds []int  `json:"local_destination_address_ids"`
+	Magnitude                  int    `json:"magnitude"`
+	Network                    string `json:"network"`
+	OffenseIds                 []int  `json:"offense_ids"`
+	SourceIP                   string `json:"source_ip"`
+}
+
+// GetByID returns Offense of the current QRadar installation by ID.
+func (c *OffenseService) ListSourceAddress(ctx context.Context, fields, filter string) ([]SourceAddress, error) {
+	req, err := c.client.requestHelp(http.MethodGet, sourceAddressPrefix, fields, filter, 0, 0, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	var result []SourceAddress
+	_, err = c.client.Do(ctx, req, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
