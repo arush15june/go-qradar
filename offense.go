@@ -50,6 +50,12 @@ type Offense struct {
 	LocalDestinationAddressIds []int    `json:"local_destination_address_ids,omitempty"`
 	LocalDestinationCount      *int     `json:"local_destination_count,omitempty"`
 	Status                     *string  `json:"status,omitempty"`
+	LogSources                 []struct {
+		ID       *int    `json:"id,omitempty"`
+		TypeID   *int    `json:"type_id,omitempty"`
+		TypeName *string `json:"type_name,omitempty"`
+		Name     *string `json:"name,omitempty"`
+	} `json:"log_sources,omitempty"`
 }
 
 // Get returns Offenses of the current QRadar installation.
