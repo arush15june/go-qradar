@@ -54,6 +54,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// Close deletes the search from QRadar.
+	defer scroller.Close()
 
 	fields := []string{}
 	if *fieldsCSV != "-" {
@@ -63,6 +65,9 @@ func main() {
 	if len(fields) == 0 {
 		for scroller.Next(context.Background()) {
 			fmt.Println(scroller.Result())
+		}
+		if err := scroller.Err(); err != nil {
+			log.Print(err)
 		}
 		return
 	}
@@ -82,5 +87,8 @@ func main() {
 			selected = append(selected, strings.TrimSuffix(fmt.Sprintf("%v", v), "\n"))
 		}
 		w.WriteAll([][]string{selected})
+	}
+	if err := scroller.Err(); err != nil {
+		log.Print(err)
 	}
 }

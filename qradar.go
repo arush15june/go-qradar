@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	libraryVersion    = "1.3.3"
+	libraryVersion    = "1.4.0"
 	defaultAPIVersion = "12.0"
 	userAgent         = "go-qradar/" + libraryVersion
 
@@ -323,9 +324,10 @@ func CheckResponse(r *http.Response) error {
 	case http.StatusNotFound, http.StatusConflict, http.StatusUnprocessableEntity, http.StatusBadRequest,
 		http.StatusInternalServerError, http.StatusServiceUnavailable, http.StatusForbidden:
 		var v ErrorMessage
-		err := json.NewDecoder(r.Body).Decode(&v)
-		if err != nil {
-			return fmt.Errorf("%s %d: %s", r.Request.URL.Path, r.StatusCode, err.Error())
+		if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
+			// Keep the status reachable (StatusCode, IsNotFound) when the
+			// body is not a QRadar error document.
+			return &ErrorMessage{resp: r, Message: err.Error()}
 		}
 		v.resp = r
 		return &v
@@ -352,8 +354,27 @@ type ErrorMessage struct {
 	} `json:"details,omitempty"`
 }
 
+// StatusCode returns the HTTP status of the response that carried the
+// error, or 0 when it is not known.
+func (e *ErrorMessage) StatusCode() int {
+	if e == nil || e.resp == nil {
+		return 0
+	}
+	return e.resp.StatusCode
+}
+
+// IsNotFound reports whether err is a QRadar API "not found" (HTTP 404)
+// error.
+func IsNotFound(err error) bool {
+	var em *ErrorMessage
+	return errors.As(err, &em) && em.StatusCode() == http.StatusNotFound
+}
+
 // Error satisfies the error interface.
 func (e *ErrorMessage) Error() string {
+	if e.resp == nil || e.resp.Request == nil {
+		return fmt.Sprintf("qradar api: %s [%s]", e.Message, string(e.Code))
+	}
 	return fmt.Sprintf(
 		"%s %d: %s [%s]",
 		e.resp.Request.URL.Path, e.resp.StatusCode, e.Message, string(e.Code),
